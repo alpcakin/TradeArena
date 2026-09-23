@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TradeArena</title>
+  <style>
+    :root { --bg: #0f1419; --card: #1a2029; --text: #e6e9ee; --muted: #8a94a3; --up: #22c55e; --down: #ef4444; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    #status { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 12px 14px; text-align: left; }
+    th { color: var(--muted); font-weight: 500; font-size: .85rem; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr + tr td { border-top: 1px solid #262e3a; }
+    .up { color: var(--up); }  .down { color: var(--down); }
+    .flash-up { animation: flashUp .6s; }  .flash-down { animation: flashDown .6s; }
+    @keyframes flashUp { from { background: rgba(34,197,94,.25); } }
+    @keyframes flashDown { from { background: rgba(239,68,68,.25); } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>📈 TradeArena</h1>
+  <div id="status">Connecting…</div>
+  <table>
+    <thead><tr><th>Stock</th><th class="num">Price</th><th class="num">Change</th></tr></thead>
+    <tbody id="prices"></tbody>
+  </table>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+<script>
+  const rows = {};           // symbol -> { tr, lastPrice }
+  const tbody = document.getElementById("prices");
+  const status = document.getElementById("status");
+
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/hubs/market")
+    .withAutomaticReconnect()
+    .build();
+
+  // The Gateway calls this every time MarketService publishes a tick.
+  connection.on("marketTick", tick => {
+    for (const s of tick.prices) {
+      let row = rows[s.symbol];
+      if (!row) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><strong>${s.symbol}</strong> <span style="color:var(--muted)">${s.name}</span></td>
+                        <td class="num price"></td><td class="num change"></td>`;
+        tbody.appendChild(tr);
+        row = rows[s.symbol] = { tr, lastPrice: s.price };
+      }
+      const priceCell = row.tr.querySelector(".price");
+      const changeCell = row.tr.querySelector(".change");
+
+      priceCell.textContent = "$" + s.price.toFixed(2);
+      changeCell.textContent = (s.changePercent >= 0 ? "+" : "") + s.changePercent.toFixed(2) + "%";
+      changeCell.className = "num change " + (s.changePercent >= 0 ? "up" : "down");
+
+      if (s.price !== row.lastPrice) {
+        priceCell.classList.remove("flash-up", "flash-down");
+        void priceCell.offsetWidth; // restart the animation
+        priceCell.classList.add(s.price > row.lastPrice ? "flash-up" : "flash-down");
+      }
+      row.lastPrice = s.price;
+    }
+    status.textContent = "Live · last update " + new Date(tick.timestamp).toLocaleTimeString();
+  });
+
+  connection.onreconnecting(() => status.textContent = "Reconnecting…");
+  connection.start().catch(err => status.textContent = "Connection failed: " + err);
+</script>
+</body>
+</html>

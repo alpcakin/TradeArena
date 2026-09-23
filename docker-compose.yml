@@ -1,0 +1,27 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"     # AMQP (services connect here)
+      - "15672:15672"   # management UI: http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  market:
+    build: { context: ., dockerfile: src/MarketService/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
+  gateway:
+    build: { context: ., dockerfile: src/Gateway/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+    ports:
+      - "8080:8080"     # open http://localhost:8080
+    depends_on:
+      rabbitmq: { condition: service_healthy }
