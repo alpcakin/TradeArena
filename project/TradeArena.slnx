@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Contracts/TradeArena.Contracts.csproj" />
+    <Project Path="src/Gateway/TradeArena.Gateway.csproj" />
+    <Project Path="src/MarketService/TradeArena.MarketService.csproj" />
+    <Project Path="src/PortfolioService/TradeArena.PortfolioService.csproj" />
+    <Project Path="src/LeaderboardService/TradeArena.LeaderboardService.csproj" />
+    <Project Path="src/GameService/TradeArena.GameService.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TradeArena</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">📈 TradeArena</div>
+  <div class="round" id="round">Connecting…</div>
+  <div class="me" id="me" hidden>
+    <span id="me-name"></span>
+    <button id="leave" class="link" type="button">Leave</button>
+  </div>
+</header>
+
+<main class="layout">
+  <div class="col left">
+    <section class="card market">
+      <div class="card-head">
+        <h2>Market</h2>
+        <label class="qty">Quantity <input id="qty" type="number" min="1" max="10000" value="10"></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Stock</th><th class="num">Price</th><th class="num change">Change</th><th class="num">Owned</th><th></th></tr>
+          </thead>
+          <tbody id="prices">
+            <tr class="empty"><td colspan="5">Waiting for the first prices…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card activity">
+      <h2>Activity</h2>
+      <ul id="activity" class="log"><li class="empty">Your orders and round events show up here.</li></ul>
+    </section>
+  </div>
+
+  <div class="col right">
+    <section class="card player">
+      <form id="join" class="join">
+        <h2>Join the arena</h2>
+        <p class="muted">Pick a nickname and start trading. Everyone starts each round with $10,000.</p>
+        <div class="join-row">
+          <input id="nickname" maxlength="16" placeholder="Nickname" autocomplete="off" required>
+          <button type="submit">Join</button>
+        </div>
+        <p id="join-error" class="error"></p>
+      </form>
+
+      <div id="portfolio" hidden>
+        <h2>My portfolio</h2>
+        <dl class="stats">
+          <div><dt>Cash</dt><dd id="cash">–</dd></div>
+          <div><dt>Shares</dt><dd id="shares">–</dd></div>
+          <div><dt>Net worth</dt><dd id="networth">–</dd></div>
+          <div><dt>Profit</dt><dd id="profit">–</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="card leaderboard">
+      <h2>Leaderboard</h2>
+      <ol id="leaderboard" class="ranking"></ol>
+    </section>
+
+    <section class="card history">
+      <h2>Past rounds</h2>
+      <ul id="history" class="log"><li class="empty">No finished rounds yet.</li></ul>
+    </section>
+  </div>
+</main>
+
+<dialog id="round-over">
+  <h2 id="ro-title">Round over</h2>
+  <p id="ro-winner"></p>
+  <ol id="ro-standings" class="ranking"></ol>
+  <p id="ro-me" class="muted"></p>
+  <p class="muted">Next round starts in <strong id="ro-next">–</strong></p>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

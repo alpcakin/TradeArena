@@ -1,0 +1,75 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"     # AMQP (services connect here)
+      - "15672:15672"   # management UI: http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  market:
+    build: { context: ., dockerfile: src/MarketService/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
+  portfolio:
+    build: { context: ., dockerfile: src/PortfolioService/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+      ConnectionStrings__Portfolio: Host=postgres;Database=tradearena_portfolio;Username=postgres;Password=postgres;Gss Encryption Mode=Disable
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+
+  leaderboard:
+    build: { context: ., dockerfile: src/LeaderboardService/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+
+  game:
+    build: { context: ., dockerfile: src/GameService/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+      ConnectionStrings__Game: Host=postgres;Database=tradearena_game;Username=postgres;Password=postgres;Gss Encryption Mode=Disable
+      Game__RoundSeconds: ${ROUND_SECONDS:-300}
+      Game__BreakSeconds: ${BREAK_SECONDS:-20}
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+      portfolio: { condition: service_started }
+      leaderboard: { condition: service_started }
+
+  gateway:
+    build: { context: ., dockerfile: src/Gateway/Dockerfile }
+    environment:
+      RabbitMq__Host: rabbitmq
+      Services__Game: http://game:8080
+    ports:
+      - "8080:8080"     # open http://localhost:8080
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      game: { condition: service_started }
+
+volumes:
+  pgdata:
