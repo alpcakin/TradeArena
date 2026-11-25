@@ -7,4 +7,7 @@
     <Project Path="src/LeaderboardService/TradeArena.LeaderboardService.csproj" />
     <Project Path="src/GameService/TradeArena.GameService.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TradeArena.Tests/TradeArena.Tests.csproj" />
+  </Folder>
 </Solution>
